@@ -9,59 +9,41 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.fragment.app.setFragmentResult
-import androidx.fragment.app.viewModels
-import androidx.navigation.fragment.findNavController
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
-import com.secondworld.sportic.R
-import com.secondworld.sportic.core.BaseFragment
-import com.secondworld.sportic.databinding.FragmentMainScreenBinding
 import com.secondworld.sportic.presentation.screens.map.MapActivity
-import com.secondworld.sportic.presentation.screens.map.MapFragment
+import com.secondworld.sportic.databinding.ActivityMainBinding
 
 @SuppressLint("SetTextI18n", "MissingPermission")
-class MainScreenFragment : BaseFragment<FragmentMainScreenBinding>(), LocationListener {
-
-    private val viewModel : MainScreenViewModel by viewModels()
-
-    private lateinit var locationManager: LocationManager
-    private val locationPermissionCode = 2
+class MainActivity : AppCompatActivity(), LocationListener {
 
     // TODO: нужно сделать кнопку по которой будет стартовать запись трека и кнопку по которой будет останавливаться запись трека
     // TODO: нужно сделать лампочку и секундомер сколько идет запись
 
+    private lateinit var binding: ActivityMainBinding
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
+    private lateinit var locationManager: LocationManager
+    private val locationPermissionCode = 2
 
-        initView()
-    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-    private fun initView() {
-        binding.getLocation.setOnClickListener {
-            getLocation()
-        }
+        title = "Определение текущих координат"
+
+        binding.getLocation.setOnClickListener { getLocation() }
     }
 
     private fun getLocation(): Location? {
 
-        if ((ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            ActivityCompat.requestPermissions(requireActivity(), arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), locationPermissionCode)
+        if ((ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), locationPermissionCode)
         }
 
-        locationManager = requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         // TODO: нужно по кнопке менять активность
         val isGPSEnabled: Boolean = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -86,12 +68,10 @@ class MainScreenFragment : BaseFragment<FragmentMainScreenBinding>(), LocationLi
 //        binding.textView.text =
 //            "Latitude: " + location.latitude + " , Longitude: " + location.longitude
 
-        val bundle = Bundle()
-        bundle.putDouble("lat", location.latitude)
-        bundle.putDouble("lon", location.longitude)
-
-        setFragmentResult("result", bundle)
-        findNavController().navigate(R.id.mapFragment)
+        val intent = Intent(this, MapActivity::class.java)
+        intent.putExtra("lat", location.latitude)
+        intent.putExtra("lon", location.longitude)
+        startActivity(intent)
     }
 
     @SuppressLint("MissingSuperCall")
@@ -108,8 +88,4 @@ class MainScreenFragment : BaseFragment<FragmentMainScreenBinding>(), LocationLi
             }
         }
     }
-
-    override fun initBinding(inflater: LayoutInflater, container: ViewGroup?) =
-        FragmentMainScreenBinding.inflate(inflater, container, false)
-
 }
